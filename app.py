@@ -52,7 +52,7 @@ negative_words = [
     "bikin stress", "stress", "males", "muak", "benci", "jijik", "frustrasi", "sangat buruk",
     "tidak worth it", "tidak bermanfaat", "tidak ada gunanya", "tidak bekerja dengan baik",
     "terbuang", "buang waktu", "tidak maksimal", "tidak optimal", "tidak akurat", "tidak cocok",
-    "sampah", "ampas", "menipu", "tipu", "tipuan", "hoax", "palsu", "bohong", "pembohongan", "login"
+    "sampah", "ampas", "menipu", "tipu", "tipuan", "hoax", "palsu", "bohong", "pembohongan", "login", "gabisa","gimana"
 ]
 
 def auto_label(text, positive_words, negative_words):
@@ -266,5 +266,6 @@ with tab2:
                 file_name="data_rapidminer.csv",
                 mime="text/csv"
             )
+
 
 
