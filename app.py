@@ -212,53 +212,126 @@ with tab1:
                 st.success("Labeling disimpan sebagai labeled_data.csv!")
 
 # ============================================================
-# TAB TRAINING & EVALUASI
+# TAB TRAINING & EVALUASI (VERSI LENGKAP DENGAN TEORI)
 # ============================================================
 with tab2:
     if 'labeled_df' not in st.session_state:
         st.info("⚠ Silakan upload data (hasil scraping CSV) dan lakukan labeling dulu di tab 'Upload & Preprocessing'.")
     else:
         st.header("Training & Evaluasi Naive Bayes")
+
+        # ============================
+        # ✨ PENJELASAN TEORI NAIVE BAYES
+        # ============================
+        st.subheader("📘 Dasar Teori Naive Bayes")
+
+        st.markdown("""
+Teorema Bayes digunakan untuk memperkirakan peluang suatu ulasan termasuk **Positif** atau **Negatif** berdasarkan kata-kata yang muncul di dalamnya.
+
+### **1️⃣ Teorema Bayes (Dasar)**
+\\[
+P(C \\mid X) = \\frac{P(X \\mid C) \\cdot P(C)}{P(X)}
+\\]
+
+- **P(C)** → Probabilitas awal kelas (prior)
+- **P(X|C)** → Peluang kata muncul dalam kelas tertentu (likelihood)
+- **P(C|X)** → Probabilitas kelas setelah melihat kata-kata (posterior)
+
+### **2️⃣ Naive Bayes Multinomial untuk Teks**
+Pada teks, setiap kata dianggap fitur yang independen:
+
+\\[
+P(C \\mid x_1, x_2, ..., x_n)
+\\propto 
+P(C) \\cdot \\prod_{i=1}^{n} P(x_i \\mid C)
+\\]
+
+Model menghitung:
+- Jumlah kata per kelas  
+- Prior kelas  
+- Likelihood kata menggunakan **Laplace smoothing**  
+
+Inilah model yang digunakan aplikasi ini saat memprediksi sentimen ulasan.
+        """)
+
+        # ============================
+        # CEK DATA
+        # ============================
         df = st.session_state['labeled_df'].copy()
 
-        # pastikan kolom Preprocessed ada (jika user mengedit layout)
         if 'Preprocessed' not in df.columns:
             st.error("Data tidak memiliki kolom 'Preprocessed'. Kembali ke tab Preprocessing.")
         else:
+            # ============================
+            # TRAIN MODEL
+            # ============================
             nb = NaiveBayesClassifier()
             nb.train(df)
 
             df['Prediksi'] = df['Preprocessed'].apply(nb.predict)
 
-            st.subheader("Hasil Prediksi")
+            st.subheader("📊 Hasil Prediksi")
             st.dataframe(df[['content','Label','Prediksi']])
 
-            cm = confusion_matrix(df['Label'], df['Prediksi'], labels=['Positif','Negatif'])
-            st.subheader("Confusion Matrix")
-            st.write(pd.DataFrame(cm, index=['Positif','Negatif'], columns=['Positif','Negatif']))
+            # ============================
+            # CONFUSION MATRIX
+            # ============================
+            st.subheader("📉 Confusion Matrix")
 
+            cm = confusion_matrix(df['Label'], df['Prediksi'], labels=['Positif','Negatif'])
+            st.write(pd.DataFrame(cm,
+                index=['Aktual: Positif','Aktual: Negatif'],
+                columns=['Prediksi: Positif','Prediksi: Negatif']
+            ))
+
+            # ============================
+            # HITUNG METRIK
+            # ============================
             TP = int(cm[0][0])
             FN = int(cm[0][1])
             FP = int(cm[1][0])
             TN = int(cm[1][1])
 
             accuracy = (TP + TN) / cm.sum() if cm.sum() > 0 else 0.0
+
             precision_pos = precision_score(df['Label'], df['Prediksi'], pos_label='Positif', zero_division=0)
             recall_pos = recall_score(df['Label'], df['Prediksi'], pos_label='Positif', zero_division=0)
             f1_pos = f1_score(df['Label'], df['Prediksi'], pos_label='Positif', zero_division=0)
+
             precision_neg = precision_score(df['Label'], df['Prediksi'], pos_label='Negatif', zero_division=0)
             recall_neg = recall_score(df['Label'], df['Prediksi'], pos_label='Negatif', zero_division=0)
             f1_neg = f1_score(df['Label'], df['Prediksi'], pos_label='Negatif', zero_division=0)
 
-            st.subheader("Detail Evaluasi")
+            # ============================
+            # DETAIL EVALUASI
+            # ============================
+            st.subheader("🔍 Detail Evaluasi Model")
+
             st.table(pd.DataFrame({
-                'Metrik': ['TP','TN','FP','FN','Accuracy','Precision+','Recall+','F1+','Precision-','Recall-','F1-'],
-                'Nilai': [TP,TN,FP,FN,f"{accuracy*100:.2f}%",
-                          f"{precision_pos:.2f}", f"{recall_pos:.2f}", f"{f1_pos:.2f}",
-                          f"{precision_neg:.2f}", f"{recall_neg:.2f}", f"{f1_neg:.2f}"]
+                'Metrik': [
+                    'True Positive (TP)',
+                    'True Negative (TN)',
+                    'False Positive (FP)',
+                    'False Negative (FN)',
+                    'Accuracy',
+                    'Precision (Positif)',
+                    'Recall (Positif)',
+                    'F1-Score (Positif)',
+                    'Precision (Negatif)',
+                    'Recall (Negatif)',
+                    'F1-Score (Negatif)'
+                ],
+                'Nilai': [
+                    TP, TN, FP, FN,
+                    f"{accuracy*100:.2f}%",
+                    f"{precision_pos:.2f}", f"{recall_pos:.2f}", f"{f1_pos:.2f}",
+                    f"{precision_neg:.2f}", f"{recall_neg:.2f}", f"{f1_neg:.2f}"
+                ]
             }))
 
-            # Export RapidMiner
+            # ============================
+            # EXPORT UNTUK RAPIDMINER
+            # ============================
             export_df = df[['content','Preprocessed','Label','Prediksi']]
             st.download_button(
                 "📥 Download untuk RapidMiner (CSV)",
