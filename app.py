@@ -34,13 +34,25 @@ def preprocess_text(text, kamus, sentimen_words):
 # ---------------------------
 positive_words = [
     "baik","bagus","cepat","mudah","enak","nyaman","puas","suka","senang","aman",
-    "stabil","responsif","efektif","efisien","berguna","bermanfaat"
-    # ... tambahkan sisanya seperti di kode asli
+    "stabil","responsif","efektif","efisien","berguna","bermanfaat" "baik",
+"bagus","cepat","mudah","enak","nyaman","puas","suka","senang","aman","stabil","responsif","efektif","efisien","berguna","bermanfaat","maksimal","optimal","akurat","cocok","ramah","jelas","sesuai","bebas","menyenangkan","menarik","keren","hebat","mantap","unggul","positif","oke","solid","top","sempurna"
+
 ]
 negative_words = [
-    "buruk","jelek","error","eror","gagal","lemot","lambat","susah","kecewa","kacau",
-    "bug","crash","macet","freeze"
-    # ... tambahkan sisanya seperti di kode asli
+    "buruk", "jelek", "error", "eror", "gagal", "lemot", "lelet", "lambat", "lola", "slow",
+    "parah", "susah", "lama", "kecewa", "kacau", "update", "hang", "bug", "crash", "bermasalah",
+    "kurang", "tidak bisa", "tidak mau", "tidak berfungsi", "tidak jalan", "tidak bekerja",
+    "macet", "freeze", "terhenti", "hilang", "terhapus", "ngelag", "lag", "ngehang", "ribet",
+    "berantakan", "membingungkan", "menyusahkan", "payah", "jelek sekali", "tidak memuaskan",
+    "tidak responsif", "membosankan", "menjengkelkan", "menyebalkan", "mengecewakan", "menakutkan",
+    "tidak jelas", "tidak sesuai", "tidak stabil", "mati", "shutdown", "restart", "resiko",
+    "hancur", "rusak", "cacat", "tidak enak", "tidak nyaman", "melelahkan", "membuat marah",
+    "tidak ramah", "tidak berguna", "tidak efektif", "tidak efisien", "menurunkan", "memburuk",
+    "lemah", "boros", "tidak aman", "keterlaluan", "terlalu lambat", "terlalu lama", "terlalu rumit",
+    "bikin stress", "stress", "males", "muak", "benci", "jijik", "frustrasi", "sangat buruk",
+    "tidak worth it", "tidak bermanfaat", "tidak ada gunanya", "tidak bekerja dengan baik",
+    "terbuang", "buang waktu", "tidak maksimal", "tidak optimal", "tidak akurat", "tidak cocok",
+    "sampah", "ampas", "menipu", "tipu", "tipuan", "hoax", "palsu", "bohong", "pembohongan"
 ]
 
 def auto_label(text, positive_words, negative_words):
@@ -254,3 +266,4 @@ with tab2:
                 file_name="data_rapidminer.csv",
                 mime="text/csv"
             )
+
