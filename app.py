@@ -34,8 +34,8 @@ def preprocess_text(text, kamus, sentimen_words):
 # ---------------------------
 positive_words = [
     "baik","bagus","cepat","mudah","enak","nyaman","puas","suka","senang","aman",
-    "stabil","responsif","efektif","efisien","berguna","bermanfaat" "baik",
-"bagus","cepat","mudah","enak","nyaman","puas","suka","senang","aman","stabil","responsif","efektif","efisien","berguna","bermanfaat","maksimal","optimal","akurat","cocok","ramah","jelas","sesuai","bebas","menyenangkan","menarik","keren","hebat","mantap","unggul","positif","oke","solid","top","sempurna"
+    "stabil","responsif","efektif","efisien","berguna","bermanfaat",
+    "maksimal","optimal","akurat","cocok","ramah","jelas","sesuai","bebas","menyenangkan","menarik","keren","hebat","mantap","unggul","positif","oke","solid","top","sempurna"
 
 ]
 negative_words = [
@@ -399,6 +399,7 @@ Menggunakan Laplace smoothing untuk mengatasi kata yang tidak muncul.
                 f"{f1_score_value:.4f}"
             ]
         }))
+
 
 
 
