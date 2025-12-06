@@ -364,7 +364,7 @@ Menggunakan Laplace smoothing untuk mengatasi kata yang tidak muncul.
         
 
         # =====================================
-        # 6️⃣ METRIK EVALUASI (PRECISION, RECALL, F1)
+        # 6️⃣ METRIK EVALUASI (Satu Nilai Precision, Recall, F1)
         # =====================================
         st.subheader("🔍 Detail Evaluasi")
         
@@ -375,30 +375,32 @@ Menggunakan Laplace smoothing untuk mengatasi kata yang tidak muncul.
         
         accuracy = (TP + TN) / cm.sum()
         
-        # Precision, Recall, F1 Manual
-        precision_pos = TP / (TP + FP) if (TP + FP) > 0 else 0
-        recall_pos = TP / (TP + FN) if (TP + FN) > 0 else 0
-        f1_pos = (2 * precision_pos * recall_pos) / (precision_pos + recall_pos) if (precision_pos + recall_pos) > 0 else 0
-        
-        precision_neg = TN / (TN + FN) if (TN + FN) > 0 else 0
-        recall_neg = TN / (TN + FP) if (TN + FP) > 0 else 0
-        f1_neg = (2 * precision_neg * recall_neg) / (precision_neg + recall_neg) if (precision_neg + recall_neg) > 0 else 0
+        # Precision, Recall, F1 untuk kelas Positif (utama)
+        precision = TP / (TP + FP) if (TP + FP) > 0 else 0
+        recall = TP / (TP + FN) if (TP + FN) > 0 else 0
+        f1_score_value = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
         
         st.table(pd.DataFrame({
             'Metrik': [
-                'True Positive (TP)', 'True Negative (TN)',
-                'False Positive (FP)', 'False Negative (FN)',
+                'True Positive (TP)', 
+                'True Negative (TN)',
+                'False Positive (FP)', 
+                'False Negative (FN)',
                 'Accuracy (%)',
-                'Precision Positif', 'Recall Positif', 'F1-Score Positif',
-                'Precision Negatif', 'Recall Negatif', 'F1-Score Negatif'
+                'Precision', 
+                'Recall', 
+                'F1-Score'
             ],
             'Nilai': [
                 TP, TN, FP, FN,
                 f"{accuracy*100:.2f}%",
-                f"{precision_pos:.4f}", f"{recall_pos:.4f}", f"{f1_pos:.4f}",
-                f"{precision_neg:.4f}", f"{recall_neg:.4f}", f"{f1_neg:.4f}"
+                f"{precision:.4f}", 
+                f"{recall:.4f}", 
+                f"{f1_score_value:.4f}"
             ]
         }))
+
+
 
 
 
