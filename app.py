@@ -212,133 +212,177 @@ with tab1:
                 st.success("Labeling disimpan sebagai labeled_data.csv!")
 
 # ============================================================
-# TAB TRAINING & EVALUASI (VERSI LENGKAP DENGAN TEORI)
+# TAB TRAINING & EVALUASI (VERSI LENGKAP DENGAN PERHITUNGAN P(C), P(X|C), P(C|X))
 # ============================================================
 with tab2:
     if 'labeled_df' not in st.session_state:
-        st.info("⚠ Silakan upload data (hasil scraping CSV) dan lakukan labeling dulu di tab 'Upload & Preprocessing'.")
+        st.info("⚠ Silakan upload data dan lakukan labeling dulu di tab sebelumnya.")
     else:
         st.header("Training & Evaluasi Naive Bayes")
 
         # ============================
-        # ✨ PENJELASAN TEORI NAIVE BAYES
+        # ✨ PENJELASAN TEORI
         # ============================
         st.subheader("📘 Dasar Teori Naive Bayes")
-
         st.markdown("""
-Teorema Bayes digunakan untuk memperkirakan peluang suatu ulasan termasuk **Positif** atau **Negatif** berdasarkan kata-kata yang muncul di dalamnya.
-
-### **1️⃣ Teorema Bayes (Dasar)**
+Teorema Bayes:
 \\[
 P(C \\mid X) = \\frac{P(X \\mid C) \\cdot P(C)}{P(X)}
 \\]
 
-- **P(C)** → Probabilitas awal kelas (prior)
-- **P(X|C)** → Peluang kata muncul dalam kelas tertentu (likelihood)
-- **P(C|X)** → Probabilitas kelas setelah melihat kata-kata (posterior)
+- **P(C)** → probabilitas awal kelas (prior)  
+- **P(X|C)** → peluang kata muncul dalam kelas tertentu (likelihood)  
+- **P(C|X)** → probabilitas kelas setelah melihat kata-kata (posterior)  
 
-### **2️⃣ Naive Bayes Multinomial untuk Teks**
-Pada teks, setiap kata dianggap fitur yang independen:
-
+Naive Bayes pada teks:
 \\[
-P(C \\mid x_1, x_2, ..., x_n)
-\\propto 
-P(C) \\cdot \\prod_{i=1}^{n} P(x_i \\mid C)
+P(C \\mid x_1 ... x_n) \\propto P(C) \\prod_i P(x_i \\mid C)
 \\]
+Menggunakan Laplace smoothing untuk mengatasi kata yang tidak muncul.
+""")
 
-Model menghitung:
-- Jumlah kata per kelas  
-- Prior kelas  
-- Likelihood kata menggunakan **Laplace smoothing**  
-
-Inilah model yang digunakan aplikasi ini saat memprediksi sentimen ulasan.
-        """)
-
-        # ============================
-        # CEK DATA
-        # ============================
+        # =====================================
+        # LOAD DATA
+        # =====================================
         df = st.session_state['labeled_df'].copy()
 
-        if 'Preprocessed' not in df.columns:
-            st.error("Data tidak memiliki kolom 'Preprocessed'. Kembali ke tab Preprocessing.")
-        else:
-            # ============================
-            # TRAIN MODEL
-            # ============================
-            nb = NaiveBayesClassifier()
-            nb.train(df)
+        # =====================================
+        # TRAIN MODEL
+        # =====================================
+        nb = NaiveBayesClassifier()
+        nb.train(df)
+        df['Prediksi'] = df['Preprocessed'].apply(nb.predict)
 
-            df['Prediksi'] = df['Preprocessed'].apply(nb.predict)
+        # =====================================
+        # 1️⃣ MENAMPILKAN PRIOR P(C)
+        # =====================================
+        st.subheader("📐 Probabilitas Awal Kelas (Prior)")
 
-            st.subheader("📊 Hasil Prediksi")
-            st.dataframe(df[['content','Label','Prediksi']])
+        total_data = len(df)
+        jumlah_pos = (df['Label'] == 'Positif').sum()
+        jumlah_neg = (df['Label'] == 'Negatif').sum()
 
-            # ============================
-            # CONFUSION MATRIX
-            # ============================
-            st.subheader("📉 Confusion Matrix")
+        P_pos = jumlah_pos / total_data
+        P_neg = jumlah_neg / total_data
 
-            cm = confusion_matrix(df['Label'], df['Prediksi'], labels=['Positif','Negatif'])
-            st.write(pd.DataFrame(cm,
-                index=['Aktual: Positif','Aktual: Negatif'],
-                columns=['Prediksi: Positif','Prediksi: Negatif']
-            ))
+        st.table(pd.DataFrame({
+            'Kelas': ['Positif','Negatif'],
+            'Jumlah Data': [jumlah_pos, jumlah_neg],
+            'Prior P(C)': [P_pos, P_neg]
+        }))
 
-            # ============================
-            # HITUNG METRIK
-            # ============================
-            TP = int(cm[0][0])
-            FN = int(cm[0][1])
-            FP = int(cm[1][0])
-            TN = int(cm[1][1])
+        # =====================================
+        # 2️⃣ MENAMPILKAN LIKELIHOOD P(X|C)
+        # =====================================
+        st.subheader("🧩 Contoh Perhitungan Likelihood Kata (P(X|C))")
 
-            accuracy = (TP + TN) / cm.sum() if cm.sum() > 0 else 0.0
+        all_words = " ".join(df['Preprocessed']).split()
+        kata_teratas = [w for w, c in Counter(all_words).most_common(6)]
 
-            precision_pos = precision_score(df['Label'], df['Prediksi'], pos_label='Positif', zero_division=0)
-            recall_pos = recall_score(df['Label'], df['Prediksi'], pos_label='Positif', zero_division=0)
-            f1_pos = f1_score(df['Label'], df['Prediksi'], pos_label='Positif', zero_division=0)
+        rows = []
+        for kata in kata_teratas:
+            pos_tokens = " ".join(df[df['Label']=='Positif']['Preprocessed']).split()
+            neg_tokens = " ".join(df[df['Label']=='Negatif']['Preprocessed']).split()
 
-            precision_neg = precision_score(df['Label'], df['Prediksi'], pos_label='Negatif', zero_division=0)
-            recall_neg = recall_score(df['Label'], df['Prediksi'], pos_label='Negatif', zero_division=0)
-            f1_neg = f1_score(df['Label'], df['Prediksi'], pos_label='Negatif', zero_division=0)
+            freq_pos = pos_tokens.count(kata)
+            freq_neg = neg_tokens.count(kata)
 
-            # ============================
-            # DETAIL EVALUASI
-            # ============================
-            st.subheader("🔍 Detail Evaluasi Model")
+            total_pos = len(pos_tokens)
+            total_neg = len(neg_tokens)
+
+            likelihood_pos = (freq_pos + 1) / (total_pos + len(all_words))
+            likelihood_neg = (freq_neg + 1) / (total_neg + len(all_words))
+
+            rows.append([kata, freq_pos, freq_neg, likelihood_pos, likelihood_neg])
+
+        st.table(pd.DataFrame(rows, columns=[
+            "Kata",
+            "Frekuensi Positif",
+            "Frekuensi Negatif",
+            "P(kata|Positif)",
+            "P(kata|Negatif)"
+        ]))
+
+        # =====================================
+        # 3️⃣ POSTERIOR P(C|X)
+        # =====================================
+        st.subheader("🎯 Contoh Perhitungan Posterior (P(C|X))")
+
+        contoh_ulasan = st.text_input(
+            "Masukkan contoh ulasan:",
+            "aplikasinya bagus dan sangat membantu"
+        )
+
+        if contoh_ulasan:
+            X = preprocess_text(contoh_ulasan, set(), set())
+            tokens = X.split()
+
+            pos_log = np.log(P_pos)
+            neg_log = np.log(P_neg)
+
+            pos_tokens = " ".join(df[df['Label']=='Positif']['Preprocessed']).split()
+            neg_tokens = " ".join(df[df['Label']=='Negatif']['Preprocessed']).split()
+
+            total_pos = len(pos_tokens)
+            total_neg = len(neg_tokens)
+
+            for kata in tokens:
+                freq_pos = pos_tokens.count(kata)
+                freq_neg = neg_tokens.count(kata)
+
+                P_x_pos = (freq_pos + 1) / (total_pos + len(all_words))
+                P_x_neg = (freq_neg + 1) / (total_neg + len(all_words))
+
+                pos_log += np.log(P_x_pos)
+                neg_log += np.log(P_x_neg)
+
+            posterior_pos = np.exp(pos_log)
+            posterior_neg = np.exp(neg_log)
+
+            total = posterior_pos + posterior_neg
 
             st.table(pd.DataFrame({
-                'Metrik': [
-                    'True Positive (TP)',
-                    'True Negative (TN)',
-                    'False Positive (FP)',
-                    'False Negative (FN)',
-                    'Accuracy',
-                    'Precision (Positif)',
-                    'Recall (Positif)',
-                    'F1-Score (Positif)',
-                    'Precision (Negatif)',
-                    'Recall (Negatif)',
-                    'F1-Score (Negatif)'
-                ],
-                'Nilai': [
-                    TP, TN, FP, FN,
-                    f"{accuracy*100:.2f}%",
-                    f"{precision_pos:.2f}", f"{recall_pos:.2f}", f"{f1_pos:.2f}",
-                    f"{precision_neg:.2f}", f"{recall_neg:.2f}", f"{f1_neg:.2f}"
-                ]
+                'Kelas': ['Positif','Negatif'],
+                'P(C|X)': [posterior_pos/total, posterior_neg/total]
             }))
 
-            # ============================
-            # EXPORT UNTUK RAPIDMINER
-            # ============================
-            export_df = df[['content','Preprocessed','Label','Prediksi']]
-            st.download_button(
-                "📥 Download untuk RapidMiner (CSV)",
-                export_df.to_csv(index=False).encode('utf-8'),
-                file_name="data_rapidminer.csv",
-                mime="text/csv"
-            )
+        # =====================================
+        # 4️⃣ MENAMPILKAN HASIL PREDIKSI
+        # =====================================
+        st.subheader("📊 Hasil Prediksi Model")
+        st.dataframe(df[['content','Preprocessed','Label','Prediksi']])
+
+        # =====================================
+        # 5️⃣ CONFUSION MATRIX
+        # =====================================
+        st.subheader("📉 Confusion Matrix")
+        cm = confusion_matrix(df['Label'], df['Prediksi'], labels=['Positif','Negatif'])
+        st.write(pd.DataFrame(cm,
+            index=['Aktual Positif','Aktual Negatif'],
+            columns=['Pred Positif','Pred Negatif']
+        ))
+
+        # =====================================
+        # 6️⃣ METRIK EVALUASI
+        # =====================================
+        st.subheader("🔍 Detail Evaluasi")
+
+        TP = int(cm[0][0])
+        FN = int(cm[0][1])
+        FP = int(cm[1][0])
+        TN = int(cm[1][1])
+
+        accuracy = (TP + TN) / cm.sum()
+
+        st.table(pd.DataFrame({
+            'Metrik': [
+                'True Positive (TP)', 'True Negative (TN)',
+                'False Positive (FP)', 'False Negative (FN)',
+                'Accuracy'
+            ],
+            'Nilai': [TP, TN, FP, FN, f"{accuracy*100:.2f}%"]
+        }))
+
 
 
 
